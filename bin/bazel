@@ -1,0 +1,27 @@
+#!/bin/bash
+set -e
+
+version=3.0.0
+case $(uname) in
+Linux)
+  hash=3efb903ef885339a271445a9940642df704f97297fbe268f131d4fe36b02ea80
+  path="https://github.com/bazelbuild/bazel/releases/download/${version}/bazel-${version}-linux-x86_64"
+  ;;
+*)
+  echo "not sure how to download kubectl for $(uname)"
+  ;;
+esac
+
+mkdir -p cache
+echo -n "$hash cache/bazel" >cache/bazel.sha256
+
+if ! sha256sum -c cache/bazel.sha256 >/dev/null; then
+  curl -L "$path" >cache/bazel
+  if ! sha256sum -c cache/bazel.sha256 >/dev/null; then
+    echo 'download failed' >/dev/stderr
+    rm cache/bazel
+    exit 1
+  fi
+fi
+chmod +x cache/bazel
+cache/bazel "${@}"
