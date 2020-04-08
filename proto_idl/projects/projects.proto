@@ -1,5 +1,7 @@
 syntax = "proto3";
 package projects;
+option go_package = "github.com/virtual-vgo/vvgo/gen/projects";
+
 
 import "google/protobuf/timestamp.proto";
 
