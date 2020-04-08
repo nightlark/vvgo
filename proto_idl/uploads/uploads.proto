@@ -1,0 +1,55 @@
+syntax = "proto3";
+package upload;
+option go_package = "github.com/virtual-vgo/vvgo/gen/uploads";
+
+// A batch of upload requests
+message BatchUploadRequest {
+    repeated UploadRequest uploads = 1;
+}
+
+message BatchUploadResult {
+    repeated UploadResult results = 1;
+}
+
+// Generic upload request
+message UploadRequest {
+    // Types of uploads we can handle
+    enum Type {
+        UNKNOWN = 0;
+        SHEETS = 1;
+        CLIX = 2;
+    }
+
+    Type upload_type = 1;
+    string project = 2;
+    string file_name = 3;
+    bytes file_bytes = 4;
+    string content_type = 5;
+
+    message SheetsUpload {
+        repeated string part_names = 1;
+        repeated uint32 part_numbers = 2;
+    }
+    SheetsUpload sheet_upload = 10;
+
+    message ClixUpload {
+        repeated string part_names = 1;
+        repeated uint32 part_numbers = 2;
+    }
+    ClixUpload click_upload = 11;
+}
+
+// Results
+message UploadResult {
+    // Status code for the upload
+    enum StatusCode {
+        OK = 0;
+        FAILED = 1;
+        INVALID = 2;
+    }
+    StatusCode code = 1;
+    string error = 2;
+}
+
+
+
