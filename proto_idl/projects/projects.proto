@@ -1,0 +1,50 @@
+syntax = "proto3";
+package projects;
+
+import "google/protobuf/timestamp.proto";
+
+// stuff we want to know about a project
+message Project {
+    string project = 1;
+    string title = 2;
+    repeated string sources = 3;
+    repeated string composers = 4;
+    repeated string arrangers = 5;
+    repeated string editors = 6;
+    repeated string transcribers = 7;
+    repeated string preparers = 8;
+    repeated string clix_by = 9;
+    repeated string reviewers = 10;
+    repeated string lyricists = 11;
+    repeated string additional_content_by = 12;
+}
+
+message Projects {
+    repeated Project projects = 1;
+}
+
+// click tracks
+message Click {
+    string project = 1;
+    string part_name = 2;
+    uint32 part_number = 3;
+    string content_type = 4;
+    google.protobuf.Timestamp created_at = 5;
+}
+
+message Clix {
+    repeated Click clix = 1;
+}
+
+// sheet music
+message Sheet {
+    string project = 1;
+    string part_name = 2;
+    uint32 part_number = 3;
+    string content_type = 4;
+    google.protobuf.Timestamp created_at = 5;
+}
+
+message Sheets {
+    repeated Sheet sheets = 1;
+}
