@@ -18,6 +18,7 @@ CMD ["make", "test"]
 FROM gcr.io/distroless/base-debian10 as vvgo
 COPY --from=builder vvgo vvgo
 COPY ./public /public
+COPY ./data/mime.types /etc/mime.types
 EXPOSE 8080
 CMD ["/vvgo"]
 ENTRYPOINT ["/vvgo"]
