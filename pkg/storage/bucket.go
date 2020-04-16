@@ -163,6 +163,10 @@ func WithBackup(putObjectFunc func(name string, object *Object) bool) func(name 
 }
 
 func (x *Bucket) PutFile(file *File) bool {
+	// check if the object already exists
+	if _, err := x.StatObject(file.ObjectKey()); err == nil {
+		return true
+	}
 	return x.PutObject(file.ObjectKey(), NewObject(file.MediaType, bytes.NewBuffer(file.Bytes)))
 }
 
