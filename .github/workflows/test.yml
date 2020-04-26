@@ -73,15 +73,8 @@ jobs:
       - name: Run `go test -race ./...`
         run: |
           set -e
-          echo "" > coverage.txt
           go generate ./...
-          for d in $(go list ./...); do
-              go test -race -coverprofile=profile.out -covermode=atomic $d
-              if [ -f profile.out ]; then
-                  cat profile.out >> coverage.txt
-                  rm profile.out
-              fi
-          done
+          go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage
         run: bash <(curl -s https://codecov.io/bash)
