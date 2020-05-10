@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"github.com/virtual-vgo/vvgo/pkg/login"
 	"github.com/virtual-vgo/vvgo/pkg/projects"
 	"github.com/virtual-vgo/vvgo/pkg/tracing"
 	"html/template"
@@ -127,7 +128,6 @@ func Header() template.HTML {
 }
 
 type NavBar struct {
-	MemberUser string
 }
 
 type NavBarRenderOpts struct {
@@ -137,15 +137,17 @@ type NavBarRenderOpts struct {
 }
 
 func (x NavBar) NewOpts(ctx context.Context, r *http.Request) NavBarRenderOpts {
-	var opts NavBarRenderOpts
-	user, _, _ := r.BasicAuth()
-	switch user {
-	case x.MemberUser:
-		opts.ShowMemberLinks = true
-	default:
-		opts.ShowLogin = true
+	ctxIdentity := ctx.Value("vvgo_access_identity")
+	identity, ok := ctxIdentity.(*login.Identity)
+	if !ok {
+		identity = new(login.Identity)
+		*identity = login.Anonymous()
 	}
-	return opts
+
+	return NavBarRenderOpts{
+		ShowMemberLinks: identity.HasRole(login.RoleVVGOMember),
+		ShowLogin:       identity.IsAnonymous(),
+	}
 }
 
 func (x NavBar) RenderHTML(opts NavBarRenderOpts) template.HTML {

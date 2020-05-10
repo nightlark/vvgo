@@ -51,12 +51,14 @@ func NewClientMust(config Config) *Client {
 
 type Action struct {
 	cmd         string
+	args        []string
 	radixAction radix.Action
 }
 
 func Cmd(rcv interface{}, cmd string, args ...string) Action {
 	return Action{
 		cmd:         cmd,
+		args:        args,
 		radixAction: radix.Cmd(rcv, cmd, args...),
 	}
 }

@@ -2,12 +2,16 @@ package api
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/gob"
 	"encoding/json"
+	"github.com/sirupsen/logrus"
+	"github.com/virtual-vgo/vvgo/pkg/login"
 	"html/template"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func readBody(dest io.Writer, r *http.Request) bool {
@@ -132,4 +136,20 @@ func unauthorized(w http.ResponseWriter) {
 
 func notImplemented(w http.ResponseWriter) {
 	http.Error(w, "", http.StatusNotImplemented)
+}
+
+// creates a cookie and redirects the user to the home page
+func loginRedirect(ctx context.Context, w http.ResponseWriter, r *http.Request, store *login.Store, identity *login.Identity) {
+	cookie, err := store.NewCookie(ctx, identity, 31557600*time.Second)
+	if err != nil {
+		logger.WithError(err).Error("store.NewCookie() failed")
+		internalServerError(w)
+		return
+	}
+	http.SetCookie(w, cookie)
+	logger.WithFields(logrus.Fields{
+		"identity": identity.Kind,
+		"roles":    identity.Roles,
+	}).Info("authorization succeeded")
+	http.Redirect(w, r, "/", http.StatusFound)
 }

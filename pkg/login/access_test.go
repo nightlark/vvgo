@@ -15,8 +15,8 @@ func TestRole_String(t *testing.T) {
 
 func TestIdentity_HasRole(t *testing.T) {
 	type fields struct {
-		Kind  string
-		Roles string
+		Kind  Kind
+		Roles []Role
 	}
 	type args struct {
 		role Role
@@ -29,13 +29,13 @@ func TestIdentity_HasRole(t *testing.T) {
 	}{
 		{
 			name:   "success",
-			fields: fields{Roles: "Tester"},
+			fields: fields{Roles: []Role{"Tester"}},
 			args:   args{"Tester"},
 			want:   true,
 		},
 		{
 			name:   "failure",
-			fields: fields{Roles: "Cheater"},
+			fields: fields{Roles: []Role{"Cheater"}},
 			args:   args{"Tester"},
 			want:   false,
 		},
@@ -54,8 +54,8 @@ func TestIdentity_HasRole(t *testing.T) {
 
 func TestIdentity_Role(t *testing.T) {
 	type fields struct {
-		Kind  string
-		Roles string
+		Kind  Kind
+		Roles []Role
 	}
 	tests := []struct {
 		name   string
@@ -64,17 +64,16 @@ func TestIdentity_Role(t *testing.T) {
 	}{
 		{
 			name:   "no roles",
-			fields: fields{Roles: ""},
 			want:   RoleAnonymous,
 		},
 		{
 			name:   "one role",
-			fields: fields{Roles: "Tester"},
+			fields: fields{Roles: []Role{"Tester"}},
 			want:   "Tester",
 		},
 		{
 			name:   "two roles",
-			fields: fields{Roles: "Tester:Cheater"},
+			fields: fields{Roles: []Role{"Tester", "Cheater"}},
 			want:   "Tester",
 		},
 	}

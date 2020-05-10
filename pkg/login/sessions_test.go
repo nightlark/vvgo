@@ -22,11 +22,11 @@ func TestStore_GetIdentity(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
 		ctx := context.Background()
 		store := newStore()
-		session, err := store.NewSession(ctx, &Identity{Kind: "Testing", Roles: "Tester"}, 30*time.Second)
+		session, err := store.NewSession(ctx, &Identity{Kind: "Testing", Roles: []Role{"Tester"}}, 30*time.Second)
 		require.NoError(t, err)
 		var gotIdentity Identity
 		require.NoError(t, store.GetSession(ctx, session, &gotIdentity))
-		assert.Equal(t, Identity{Kind: "Testing", Roles: "Tester"}, gotIdentity)
+		assert.Equal(t, Identity{Kind: "Testing", Roles: []Role{"Tester"}}, gotIdentity)
 	})
 
 	t.Run("doesnt exist", func(t *testing.T) {
@@ -42,7 +42,7 @@ func TestStore_DeleteIdentity(t *testing.T) {
 	ctx := context.Background()
 	store := newStore()
 
-	session1, err := store.NewSession(ctx, &Identity{Kind: "Testing", Roles: "Tester"}, 30*time.Second)
+	session1, err := store.NewSession(ctx, &Identity{Kind: "Testing", Roles: []Role{"Tester"}}, 30*time.Second)
 	require.NoError(t, err)
 	require.NoError(t, store.DeleteSession(ctx, session1))
 	var gotIdentity Identity
@@ -68,7 +68,7 @@ func TestStore_ReadSessionFromRequest(t *testing.T) {
 		ctx := context.Background()
 		store := newStore()
 		store.config.CookieName = "vvgo-cookie"
-		session, err := store.NewSession(ctx, &Identity{Kind: "Testing", Roles: "Tester"}, 30*time.Second)
+		session, err := store.NewSession(ctx, &Identity{Kind: "Testing", Roles: []Role{"Tester"}}, 30*time.Second)
 		require.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -78,7 +78,7 @@ func TestStore_ReadSessionFromRequest(t *testing.T) {
 		})
 		var got Identity
 		require.NoError(t, store.ReadSessionFromRequest(ctx, req, &got))
-		assert.Equal(t, Identity{Kind: "Testing", Roles: "Tester"}, got)
+		assert.Equal(t, Identity{Kind: "Testing", Roles: []Role{"Tester"}}, got)
 	})
 }
 
@@ -88,7 +88,7 @@ func TestStore_NewCookie(t *testing.T) {
 	store.config.CookiePath = "/authorized"
 	store.config.CookieName = "cookie-name"
 	store.config.CookieDomain = "tester.local"
-	gotCookie, err := store.NewCookie(ctx, &Identity{Kind: "Testing", Roles: "Tester"}, 30*time.Second)
+	gotCookie, err := store.NewCookie(ctx, &Identity{Kind: "Testing", Roles: []Role{"Tester"}}, 30*time.Second)
 	require.NoError(t, err)
 
 	assert.Equal(t, "cookie-name", gotCookie.Name, "cookie.Name")
