@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/virtual-vgo/vvgo/pkg/log"
 	"github.com/virtual-vgo/vvgo/pkg/redis"
 	"net/http"
 	"strconv"
@@ -56,18 +55,15 @@ func (x *Store) ReadSessionFromRequest(ctx context.Context, r *http.Request, des
 	return x.GetSession(ctx, cookie.Value, dest)
 }
 
-var logger = log.Logger()
-
 func (x *Store) DeleteSessionFromRequest(ctx context.Context, r *http.Request) error {
 	cookie, err := r.Cookie(x.config.CookieName)
 	if err != nil {
-		logger.WithError(err).Error("r.Cookie() failed")
 		return nil
 	}
 	return x.DeleteSession(ctx, cookie.Value)
 }
 
-// NewCookie returns cookie with a cryptographically signed session payload.
+// NewCookie returns cookie with a crypto-rand session id.
 func (x *Store) NewCookie(ctx context.Context, src *Identity, expires time.Duration) (*http.Cookie, error) {
 	session, err := x.NewSession(ctx, src, expires)
 	if err != nil {

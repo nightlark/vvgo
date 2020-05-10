@@ -50,7 +50,6 @@ func TestStore_DeleteIdentity(t *testing.T) {
 }
 
 func TestStore_ReadSessionFromRequest(t *testing.T) {
-
 	t.Run("no session", func(t *testing.T) {
 		ctx := context.Background()
 		store := newStore()
@@ -79,6 +78,33 @@ func TestStore_ReadSessionFromRequest(t *testing.T) {
 		var got Identity
 		require.NoError(t, store.ReadSessionFromRequest(ctx, req, &got))
 		assert.Equal(t, Identity{Kind: "Testing", Roles: []Role{"Tester"}}, got)
+	})
+}
+
+func TestStore_DeleteSessionFromRequest(t *testing.T) {
+	t.Run("no session", func(t *testing.T) {
+		ctx := context.Background()
+		store := newStore()
+		store.config.CookieName = "vvgo-cookie"
+
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		require.NoError(t, store.DeleteSessionFromRequest(ctx, req))
+	})
+	t.Run("cookie", func(t *testing.T) {
+		ctx := context.Background()
+		store := newStore()
+		store.config.CookieName = "vvgo-cookie"
+		session, err := store.NewSession(ctx, &Identity{Kind: "Testing", Roles: []Role{"Tester"}}, 30*time.Second)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "vvgo-cookie",
+			Value: session,
+		})
+		require.NoError(t, store.DeleteSessionFromRequest(ctx, req))
+		var gotIdentity Identity
+		assert.Equal(t, ErrSessionNotFound, store.GetSession(ctx, session, &gotIdentity))
 	})
 }
 
