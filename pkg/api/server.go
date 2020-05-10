@@ -62,7 +62,7 @@ func NewStorage(ctx context.Context, warehouse *storage.Warehouse, config Storag
 }
 
 func NewServer(config ServerConfig, database *Storage) *http.Server {
-	navBar := NavBar{MemberUser: config.MemberUser}
+	navBar := NavBar{}
 	rbacMux := RBACMux{
 		Basic: map[[2]string][]login.Role{
 			{config.MemberUser, config.MemberPass}: {login.RoleVVGOMember},

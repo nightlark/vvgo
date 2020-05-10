@@ -14,10 +14,6 @@ func init() {
 
 var lrand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-func newParts() *parts.RedisParts {
-	return parts.NewParts("testing" + strconv.Itoa(lrand.Int()))
-}
-
 func newSessions(cookieDomain string) *login.Store {
 	return login.NewStore(login.Config{
 		Namespace:    "testing" + strconv.Itoa(lrand.Int()),
@@ -25,4 +21,8 @@ func newSessions(cookieDomain string) *login.Store {
 		CookieDomain: cookieDomain,
 		CookiePath:   "/",
 	})
+}
+
+func newParts() *parts.RedisParts {
+	return parts.NewParts("testing" + strconv.Itoa(lrand.Int()))
 }
