@@ -81,9 +81,6 @@ func TestLogoutHandler_ServeHTTP(t *testing.T) {
 	defer ts.Close()
 	logoutHandler.Sessions = newSessions(strings.TrimPrefix(ts.URL, "http://"))
 
-	tsUrl, err := url.Parse(ts.URL)
-	require.NoError(t, err, "url.Parse()")
-
 	// create a session and cookie
 	cookie, err := logoutHandler.Sessions.NewCookie(ctx, &login.Identity{
 		Kind:  login.KindPassword,
@@ -91,15 +88,12 @@ func TestLogoutHandler_ServeHTTP(t *testing.T) {
 	}, 3600*time.Second)
 	require.NoError(t, err)
 
-	// set the cookie on the client
-	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
-	require.NoError(t, err, "cookiejar.New")
-	jar.SetCookies(tsUrl, []*http.Cookie{cookie})
-
 	// make the request
-	client := noFollow(&http.Client{Jar: jar})
-	resp, err := client.Get(ts.URL)
-	require.NoError(t, err, "client.Get")
+	client := noFollow(http.DefaultClient)
+	req, _ := http.NewRequest(http.MethodGet, ts.URL, nil)
+	req.AddCookie(cookie)
+	resp, err := client.Do(req)
+	require.NoError(t, err, "client.Do")
 	assert.Equal(t, http.StatusFound, resp.StatusCode)
 	assert.Equal(t, "/", resp.Header.Get("Location"), "location")
 

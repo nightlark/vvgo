@@ -56,13 +56,12 @@ func NewStorage(ctx context.Context, warehouse *storage.Warehouse, config Storag
 		Clix:          newBucket(ctx, config.ClixBucketName),
 		Tracks:        newBucket(ctx, config.TracksBucketName),
 		Parts:         parts.NewParts(config.RedisNamespace),
-		Sessions:      login.NewStore(config.SessionsConfig),
+		Sessions:      login.NewStore(config.RedisNamespace, config.SessionsConfig),
 	}
 	return &db
 }
 
 func NewServer(config ServerConfig, database *Storage) *http.Server {
-	navBar := NavBar{}
 	rbacMux := RBACMux{
 		Basic: map[[2]string][]login.Role{
 			{config.MemberUser, config.MemberPass}: {login.RoleVVGOMember},
@@ -75,6 +74,19 @@ func NewServer(config ServerConfig, database *Storage) *http.Server {
 		ServeMux: http.NewServeMux(),
 	}
 
+	rbacMux.Handle("/login", LoginView{
+		Sessions: database.Sessions,
+	}, login.RoleAnonymous)
+
+	rbacMux.Handle("/login/password", PasswordLoginHandler{
+		Sessions: database.Sessions,
+		Logins: map[[2]string][]login.Role{
+			{config.MemberUser, config.MemberPass}: {login.RoleVVGOMember},
+		},
+	}, login.RoleAnonymous)
+
+	rbacMux.Handle("/logout", LogoutHandler{Sessions: database.Sessions}, login.RoleAnonymous)
+
 	rbacMux.Handle("/auth", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("authenticated"))
 	}), login.RoleVVGOMember)
@@ -86,27 +98,23 @@ func NewServer(config ServerConfig, database *Storage) *http.Server {
 	rbacMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol, login.RoleVVGODeveloper)
 	rbacMux.HandleFunc("/debug/pprof/trace", pprof.Trace, login.RoleVVGODeveloper)
 
-	partsHandler := PartView{NavBar: navBar, Storage: database}
-	rbacMux.Handle("/parts", partsHandler, login.RoleVVGOMember)
+	rbacMux.Handle("/parts", PartView{Storage: database}, login.RoleVVGOMember)
 
-	downloadHandler := DownloadHandler{
+	rbacMux.Handle("/download", DownloadHandler{
 		database.SheetsBucketName: database.Sheets.DownloadURL,
 		database.ClixBucketName:   database.Clix.DownloadURL,
 		database.TracksBucketName: database.Tracks.DownloadURL,
-	}
-	rbacMux.Handle("/download", downloadHandler, login.RoleVVGOMember)
+	}, login.RoleVVGOMember)
 
 	// Uploads
-	uploadHandler := UploadHandler{database}
-	rbacMux.Handle("/upload", uploadHandler, login.RoleVVGOUploader)
-
-	loginHandler := http.RedirectHandler("/", http.StatusTemporaryRedirect)
-	rbacMux.Handle("/login", loginHandler, login.RoleVVGOMember)
+	rbacMux.Handle("/upload", UploadHandler{
+		Storage: database,
+	}, login.RoleVVGOUploader)
 
 	rbacMux.Handle("/version", http.HandlerFunc(Version), login.RoleAnonymous)
 	rbacMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
-			IndexView{NavBar: navBar}.ServeHTTP(w, r)
+			IndexView{}.ServeHTTP(w, r)
 		} else {
 			http.FileServer(http.Dir("public")).ServeHTTP(w, r)
 		}

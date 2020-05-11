@@ -12,6 +12,38 @@ import (
 	"strings"
 )
 
+type LoginView struct {
+	NavBar   NavBar
+	Sessions *login.Store
+}
+
+func (x LoginView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx, span := tracing.StartSpan(r.Context(), "login_view")
+	defer span.Send()
+
+	var identity login.Identity
+	if err := x.Sessions.ReadSessionFromRequest(ctx, r, &identity); err == nil && !identity.IsAnonymous() {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
+	opts := x.NavBar.NewOpts(ctx, r)
+	page := struct {
+		Header template.HTML
+		NavBar template.HTML
+	}{
+		Header: Header(),
+		NavBar: x.NavBar.RenderHTML(opts),
+	}
+
+	var buf bytes.Buffer
+	if ok := parseAndExecute(&buf, &page, filepath.Join(PublicFiles, "login.gohtml")); !ok {
+		internalServerError(w)
+		return
+	}
+	buf.WriteTo(w)
+}
+
 type PartView struct {
 	NavBar
 	*Storage
@@ -136,8 +168,10 @@ type NavBarRenderOpts struct {
 	PartsActive     bool
 }
 
+const CtxKeyVVGOIdentity = "vvgo_identity"
+
 func (x NavBar) NewOpts(ctx context.Context, r *http.Request) NavBarRenderOpts {
-	ctxIdentity := ctx.Value("vvgo_access_identity")
+	ctxIdentity := ctx.Value(CtxKeyVVGOIdentity)
 	identity, ok := ctxIdentity.(*login.Identity)
 	if !ok {
 		identity = new(login.Identity)

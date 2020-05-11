@@ -22,19 +22,12 @@ func (auth *RBACMux) HandleFunc(pattern string, handler func(http.ResponseWriter
 	auth.Handle(pattern, http.HandlerFunc(handler), role)
 }
 func (auth *RBACMux) Handle(pattern string, handler http.Handler, role login.Role) {
-	// anonymous access goes directly to the mux
-	if role == login.RoleAnonymous {
-		auth.ServeMux.Handle(pattern, handler)
-		return
-	}
-
 	auth.ServeMux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracing.StartSpan(r.Context(), "rbac_mux")
 		defer span.Send()
 
 		var identity login.Identity
 
-		// check for basic auth
 		switch {
 		case auth.readBasicAuth(r, &identity):
 		case auth.readBearer(r, &identity):
@@ -44,7 +37,10 @@ func (auth *RBACMux) Handle(pattern string, handler http.Handler, role login.Rol
 		}
 
 		if identity.HasRole(role) {
-			handler.ServeHTTP(w, r.Clone(context.WithValue(ctx, "vvgo_identity", &identity)))
+			if role != login.RoleAnonymous {
+				logger.WithField("roles", identity.Roles).WithField("path", r.URL.Path).Info("access granted")
+			}
+			handler.ServeHTTP(w, r.Clone(context.WithValue(ctx, CtxKeyVVGOIdentity, &identity)))
 		} else {
 			unauthorized(w)
 		}
@@ -85,5 +81,5 @@ func (auth *RBACMux) readBearer(r *http.Request, dest *login.Identity) bool {
 }
 
 func (auth *RBACMux) readSession(ctx context.Context, r *http.Request, dest *login.Identity) bool {
-	return auth.Sessions.ReadSessionFromRequest(ctx, r, dest) != nil
+	return auth.Sessions.ReadSessionFromRequest(ctx, r, dest) == nil
 }
