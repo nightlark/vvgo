@@ -25,6 +25,10 @@ COPY ./data/mime.types /etc/
 COPY ./public /public
 COPY --from=builder vvgo /vvgo
 COPY --from=node node_modules /public/npm
+
+HEALTHCHECK --interval=5m --timeout=3s \
+  CMD curl -f http://localhost:8080/ || exit 1
+
 EXPOSE 8080
 CMD ["/vvgo"]
 ENTRYPOINT ["/vvgo"]
