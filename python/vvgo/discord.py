@@ -1,21 +1,14 @@
 import secrets
 
+import httpx
+from aioredis import RedisConnection
+from oauthlib.oauth2 import WebApplicationClient
+from quart import Blueprint, current_app, g, redirect, request
 from trio_asyncio import aio_as_trio
 
-from quart import Blueprint
-from quart import current_app, g, request
-from quart import redirect
-
-from aioredis import RedisConnection
-import httpx
-from oauthlib.oauth2 import WebApplicationClient
-
-
-from .util import BearerAuth
-from .util import abort_with_plain_response
-
-from .redis import get_redis
 from .fetch import get_fetch
+from .redis import get_redis
+from .util import BearerAuth, abort_with_plain_response
 
 discord = Blueprint('discord', __name__)
 

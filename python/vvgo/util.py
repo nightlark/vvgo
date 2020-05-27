@@ -1,9 +1,7 @@
 from typing import Generator
 
 import httpx
-
-from quart import Response
-from quart import abort
+from quart import Response, abort
 
 
 class BearerAuth(httpx.Auth):

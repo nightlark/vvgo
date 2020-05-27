@@ -1,6 +1,9 @@
-from quart import current_app, g
-
 from httpx import AsyncClient
+from quart import Quart, g
+
+
+def init_fetch(app: Quart):
+    app.teardown_appcontext(_teardown_fetch)
 
 
 def get_fetch() -> AsyncClient:
@@ -11,8 +14,7 @@ def get_fetch() -> AsyncClient:
     return g.fetch
 
 
-@current_app.teardown_appcontext
-async def teardown_fetch():
+async def _teardown_fetch(_exception=None):
     fetch: AsyncClient = g.pop('fetch', None)
 
     if fetch:
