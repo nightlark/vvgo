@@ -1,32 +1,38 @@
 [tool.poetry]
-name = "vvgo_py"
-version = "0.0.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+name = 'vvgo'
+version = '0.0.0'
+description = ''
+authors = []
+packages = [
+  { include = 'vvgo', from = 'python' }
+]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-aioredis = "^1.3.1"
-attrs = "^19.3.0"
-environ-config = "^20.1.0"
-httpx = "^0.13.1"
-oauthlib = "^3.1.0"
-quart = "^0.12.0"
-quart_trio = "^0.5.1"
-quart-trio = "^0.5.1"
-trio_asyncio = "^0.11.0"
+python = '^3.8'
+
+aioredis = '^1.3.1'
+attrs = '^19.3.0'
+environ-config = '^20.1.0'
+httpx = '^0.13.1'
+oauthlib = '^3.1.0'
+quart = '^0.12.0'
+quart_trio = '^0.5.1'
+quart-trio = '^0.5.1'
+trio_asyncio = '^0.11.0'
 
 [tool.poetry.dev-dependencies]
-black = "^19.10b0"
-mypy = "^0.770"
-pytest = "^5.4.2"
-pylint = "^2.5.2"
+black = '^19.10b0'
+mypy = '^0.770'
+pytest = '^5.4.2'
+pylint = '^2.5.2'
+pytest-trio = '^0.6.0'
+isort = '^4.3.21'
 
 [tool.black]
 line-length = 80
-target-version = ["py38"]
+target-version = ['py38']
 skip-string-normalization = true
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ['poetry>=0.12']
+build-backend = 'poetry.masonry.api'
