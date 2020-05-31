@@ -10,26 +10,23 @@ import attr
 from httpx import AsyncClient, Response
 from pytest import fixture
 from quart import Quart, g
+from quart_trio import QuartTrio
 from trio_asyncio import aio_as_trio
 
 from vvgo.config import Config
 from vvgo.fetch import init_fetch, get_fetch
 
-from .fixtures import app_config, asyncio_loop, quart_trio_app
+from .fixtures import app_config, asyncio_loop
 
 
 @fixture
-async def fetch_app(quart_trio_app: Quart, app_config: Config, asyncio_loop):
-    app = quart_trio_app
-    config = app.config
-    config.from_mapping(attr.asdict(app_config))
+async def fetch_app(base_app: QuartTrio, asyncio_loop):
+    app = base_app
 
     init_fetch(app)
 
     await app.startup()
-
     yield app
-
     await app.shutdown()
 
 

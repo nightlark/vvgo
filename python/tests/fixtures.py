@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 from typing import AsyncGenerator, Callable, Coroutine, TypeVar
 
+import attr
 from pytest import fixture
 from quart_trio import QuartTrio
 from trio_asyncio import open_loop
@@ -22,11 +23,14 @@ def app_config() -> Config:
 
 
 @fixture
-async def quart_trio_app() -> AsyncGenerator[QuartTrio, None]:
+def base_app(app_config: Config) -> QuartTrio:
+    """
+    Create an app with config, but no extensions.
+    """
     app = QuartTrio(__name__)
-    await app.startup()
-    yield app
-    await app.shutdown()
+    config = app.config
+    config.from_mapping(attr.asdict(app_config))
+    return app
 
 
 @fixture
