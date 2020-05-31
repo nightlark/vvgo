@@ -33,7 +33,7 @@ async def redis_app(quart_trio_app, app_config, asyncio_loop):
     await app.shutdown()
 
 
-async def test_redis_did_mount(redis_app: Quart, asyncio_loop):
+async def test_redis(redis_app: Quart, asyncio_loop):
     print(asyncio_loop)
     async with redis_app.app_context():
         pool: ConnectionsPool = current_app.redis_pool
