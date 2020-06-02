@@ -28,8 +28,7 @@ async def redis_app(base_app: QuartTrio, app_config, asyncio_loop):
     await app.shutdown()
 
 
-async def test_redis(redis_app: Quart, asyncio_loop):
-    print(asyncio_loop)
+async def test_redis(redis_app: QuartTrio, asyncio_loop):
     async with redis_app.app_context():
         pool: ConnectionsPool = current_app.redis_pool
         assert pool

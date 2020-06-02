@@ -28,7 +28,7 @@ async def fetch_app(base_app: QuartTrio, asyncio_loop):
     await app.shutdown()
 
 
-async def test_fetch(fetch_app: Quart, asyncio_loop):
+async def test_fetch(fetch_app: QuartTrio, asyncio_loop):
     async with fetch_app.app_context():
         client: AsyncClient = get_fetch()
         assert client
