@@ -16,8 +16,6 @@ from trio_asyncio import aio_as_trio
 from vvgo.config import Config
 from vvgo.redis import get_redis, init_redis
 
-from .fixtures import app_config, asyncio_loop
-
 
 @fixture
 async def redis_app(base_app: QuartTrio, app_config, asyncio_loop):

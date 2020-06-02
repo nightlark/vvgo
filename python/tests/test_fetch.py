@@ -16,8 +16,6 @@ from trio_asyncio import aio_as_trio
 from vvgo.config import Config
 from vvgo.fetch import init_fetch, get_fetch
 
-from .fixtures import app_config, asyncio_loop
-
 
 @fixture
 async def fetch_app(base_app: QuartTrio, asyncio_loop):
