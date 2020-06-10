@@ -1,12 +1,19 @@
 package api
 
 import (
+	"crypto/rand"
+	"encoding/binary"
 	"github.com/sirupsen/logrus"
 	"github.com/virtual-vgo/vvgo/pkg/login"
+	"github.com/virtual-vgo/vvgo/pkg/redis"
 	"github.com/virtual-vgo/vvgo/pkg/tracing"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 )
+
+const LoginCookieDuration = 2 * 7 * 24 * 3600 * time.Second // 2 weeks
 
 // PasswordLoginHandler authenticates requests using form values user and pass and a static map of valid combinations.
 // If the user pass combo exists in the map, then a login cookie with the mapped roles is create and sent in the response.
@@ -81,7 +88,6 @@ func (x LogoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 type OAuthState struct {
 	Namespace   string
 	RedirectURL string
@@ -92,7 +98,12 @@ func (x OAuthState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer span.Send()
 
 	statusBytes := make([]byte, 32)
-	rand.Read(statusBytes)
+	if _, err := rand.Read(statusBytes); err != nil {
+		logger.WithError(err).Error("rand.Read() failed")
+		internalServerError(w)
+		return
+	}
+
 	state := strconv.FormatUint(binary.BigEndian.Uint64(statusBytes[:16]), 16)
 	value := strconv.FormatUint(binary.BigEndian.Uint64(statusBytes[16:]), 16)
 	if err := redis.Do(ctx, redis.Cmd(nil, "SETEX", x.Namespace+":oauth_state:"+state, "300", "")); err != nil {
@@ -101,14 +112,22 @@ func (x OAuthState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name:     "vvgo-discord-pre",
+		Name:     "vvgo-oauth-pre",
 		Value:    value,
-		Path:     "/login/discord",
+		Path:     "/",
 		Domain:   "",
 		Expires:  time.Now().Add(300 * time.Second),
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
-	http.Redirect(w, r, x.RedirectURL+`&state=`+state, http.StatusFound)
+	redirectURL, err := url.Parse(x.RedirectURL)
+	if err != nil {
+		logger.WithError(err).Error("url.Parse() failed")
+		internalServerError(w)
+		return
+	}
+	query := redirectURL.Query()
+	query.Set("state", state)
+	redirectURL.RawQuery = query.Encode()
+	http.Redirect(w, r, redirectURL.RequestURI(), http.StatusFound)
 }
-
